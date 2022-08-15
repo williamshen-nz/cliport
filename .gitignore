@@ -140,3 +140,9 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# willshen added
+images/
+data/
+cliport_env/
+.hydra
+/cliport_quickstart.zip

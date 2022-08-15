@@ -3,6 +3,8 @@
 import numpy as np
 import pybullet as p
 
+from cliport.utils.nerf_cameras import NerfCameraParams
+
 
 class RealSenseD415():
     """Default configuration with 3 RealSense RGB-D cameras."""
@@ -45,6 +47,9 @@ class RealSenseD415():
         'zrange': (0.01, 10.),
         'noise': False
     }]
+
+    # NeRF Camera Config
+    NERF_CONFIG = NerfCameraParams.get_camera_config(image_size, intrinsics)
 
 
 class Oracle():

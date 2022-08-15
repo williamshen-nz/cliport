@@ -13,7 +13,7 @@ from cliport.utils import utils
 
 # See transporter.py, regression.py, dummy.py, task.py, etc.
 PIXEL_SIZE = 0.003125
-CAMERA_CONFIG = cameras.RealSenseD415.CONFIG
+# CAMERA_CONFIG = cameras.RealSenseD415.CONFIG
 BOUNDS = np.array([[0.25, 0.75], [-0.5, 0.5], [0, 0.28]])
 
 # Names as strings, REVERSE-sorted so longer (more specific) names are first.
@@ -157,6 +157,7 @@ class RavensDataset(Dataset):
             cam_config = self.cam_config
 
         # Get color and height maps from RGB-D images.
+        # TODO: this is important
         cmap, hmap = utils.get_fused_heightmap(
             obs, cam_config, self.bounds, self.pix_size)
         img = np.concatenate((cmap,

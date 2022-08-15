@@ -57,6 +57,33 @@ def main(cfg):
 
         env.set_task(task)
         obs = env.reset()
+
+        import matplotlib.pyplot as plt
+        from PIL import Image
+
+        # fig, axs = plt.subplots(6, 6, figsize=(20, 20))
+        # axs = axs.ravel()
+
+        task_name = task.get_lang_goal()
+        task_name = task_name.replace(' ', '_')
+        save_dir = os.path.join("/home/william/workspace/vqn/instant-ngp/cliport", task_name)
+        os.makedirs(save_dir, exist_ok=True)
+
+        for idx, im in enumerate(obs['color']):
+            # ax = axs[idx]
+            # ax.imshow(im)
+            # ax.set_xticks([])
+            # ax.set_yticks([])
+            # ax.set_title(idx)
+            # ax.set_aspect("equal")
+
+            fname = os.path.join(save_dir, f"{idx}.png")
+            im = Image.fromarray(im)
+            im.save(fname)
+
+        # plt.subplots_adjust(wspace=0.02, hspace=0.02)
+        # plt.show()
+
         info = env.info
         reward = 0
 

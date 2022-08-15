@@ -94,6 +94,7 @@ class Environment(gym.Env):
         if file_io < 0:
             raise RuntimeError('pybullet: cannot load FileIO!')
         if file_io >= 0:
+            # Allow loading from zip on disk directly
             p.executePluginCommand(
                 file_io,
                 textArgument=assets_root,
@@ -101,6 +102,7 @@ class Environment(gym.Env):
                 physicsClientId=client)
 
         p.configureDebugVisualizer(p.COV_ENABLE_GUI, 0)
+        # Disable file caching
         p.setPhysicsEngineParameter(enableFileCaching=0)
         p.setAdditionalSearchPath(assets_root)
         p.setAdditionalSearchPath(tempfile.gettempdir())
@@ -289,7 +291,7 @@ class Environment(gym.Env):
             color += np.int32(self._random.normal(0, 3, image_size))
             color = np.uint8(np.clip(color, 0, 255))
 
-        # Get depth image.
+        # Get depth image. Check pybullet docs to convert depth buffer to actual depthsd
         depth_image_size = (image_size[0], image_size[1])
         zbuffer = np.array(depth).reshape(depth_image_size)
         depth = (zfar + znear - (2. * zbuffer - 1.) * (zfar - znear))
@@ -458,6 +460,8 @@ class Environment(gym.Env):
     def _get_obs(self):
         # Get RGB-D camera image observations.
         obs = {'color': (), 'depth': ()}
+
+        # TODO(willshen): NeRF camera viewpoints
         for config in self.agent_cams:
             color, depth, _ = self.render_camera(config)
             obs['color'] += (color,)
