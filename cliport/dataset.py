@@ -2,9 +2,11 @@
 
 import os
 import pickle
+import shutil
 import warnings
 
 import numpy as np
+from loguru import logger
 from torch.utils.data import Dataset
 
 from cliport import tasks
@@ -65,6 +67,8 @@ class RavensDataset(Dataset):
             episodes = np.random.choice(range(self.n_episodes), self.n_demos, False)
             self.set(episodes)
 
+        # Keeping track of the NeRF dataset paths
+        self._nerf_dataset_paths = set()
 
     def add(self, seed, episode):
         """Add an episode to the dataset.
@@ -262,6 +266,27 @@ class RavensDataset(Dataset):
         goal = self.process_goal(goal, perturb_params=sample['perturb_params'])
 
         return sample, goal
+
+    """ Additional methods added by williamshen-nz """
+    def nerf_dataset_path(self, seed: int, step: int) -> str:
+        """
+        Return the path to the NeRF dataset for the given seed of the
+        and step within the episode.
+        """
+        parent_path = f"{self._path}/nerf-dataset/{self.n_episodes:06d}-{seed}"
+        path = f"{parent_path}/step-{step:04d}"
+
+        # If parent path (i.e. directory for this given episode exists, clear it)
+        if os.path.exists(parent_path) and parent_path not in self._nerf_dataset_paths:
+            logger.warning(f"Warning! {parent_path} already exists, overwriting...")
+            shutil.rmtree(parent_path)
+
+        # Add parent path to paths already created, so we don't create it again
+        self._nerf_dataset_paths.add(parent_path)
+
+        # Create sub-directory for this given seed and step
+        os.makedirs(path, exist_ok=True)
+        return path
 
 
 class RavensMultiTaskDataset(RavensDataset):

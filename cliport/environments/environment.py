@@ -49,6 +49,7 @@ class Environment(gym.Env):
         self.obj_ids = {'fixed': [], 'rigid': [], 'deformable': []}
         self.homej = np.array([-1, -0.5, 0.5, -0.5, -0.5, 0]) * np.pi
         self.agent_cams = cameras.RealSenseD415.CONFIG
+        self.nerf_cams = cameras.RealSenseD415.NERF_CONFIG
         self.record_cfg = record_cfg
         self.save_video = False
         self.step_counter = 0

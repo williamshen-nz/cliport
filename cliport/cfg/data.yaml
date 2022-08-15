@@ -15,6 +15,7 @@ task: packing-boxes-pairs-seen-colors
 mode: train # 'train' or 'val' or 'test'
 n: 1000 # number of demos to generate
 save_data: True  # write episodes to disk
+enable_nerf: True # enable nerf dataset
 
 dataset:
   type: 'single' # 'single' or 'multi'

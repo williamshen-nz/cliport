@@ -46,12 +46,12 @@ class NerfCameraParams:
     # z-height of the last image
     end_z: float = 0.25
     # Number of images/viewpoints
-    num_images: int = 72
+    num_images: int = 36
     # Number of circles around origin to take images from.
     num_circles: int = 2
 
     # Array of angles for the images
-    angles = np.linspace(0, num_circles * 2 * np.pi, num_images, endpoint=False)
+    angles = np.linspace(0, num_circles * 2 * np.pi, num_images)
     # Array of z heights for the images
     zs = np.linspace(start_z, end_z, num_images)
 

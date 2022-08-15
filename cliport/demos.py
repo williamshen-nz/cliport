@@ -1,13 +1,28 @@
 """Data collection script."""
-
+import logging
 import os
+import sys
+
 import hydra
 import numpy as np
 import random
 
+from loguru import logger
+from matplotlib import pyplot as plt
+
 from cliport import tasks
 from cliport.dataset import RavensDataset
 from cliport.environments.environment import Environment
+from cliport.utils.deferred import deferred
+from cliport.utils.nerf_utils import write_nerf_data
+
+
+def _plot_obs(obs) -> None:
+    """ Plot observation for debug purposes """
+    fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+    for idx, im in enumerate(obs['color']):
+        axs[idx].imshow(im)
+    plt.show()
 
 
 @hydra.main(config_path='./cfg', config_name='data')
@@ -24,6 +39,7 @@ def main(cfg):
     task.mode = cfg['mode']
     record = cfg['record']['save_video']
     save_data = cfg['save_data']
+    enable_nerf = cfg['enable_nerf']
 
     # Initialize scripted oracle agent and dataset.
     agent = task.oracle(env)
@@ -57,33 +73,6 @@ def main(cfg):
 
         env.set_task(task)
         obs = env.reset()
-
-        import matplotlib.pyplot as plt
-        from PIL import Image
-
-        # fig, axs = plt.subplots(6, 6, figsize=(20, 20))
-        # axs = axs.ravel()
-
-        task_name = task.get_lang_goal()
-        task_name = task_name.replace(' ', '_')
-        save_dir = os.path.join("/home/william/workspace/vqn/instant-ngp/cliport", task_name)
-        os.makedirs(save_dir, exist_ok=True)
-
-        for idx, im in enumerate(obs['color']):
-            # ax = axs[idx]
-            # ax.imshow(im)
-            # ax.set_xticks([])
-            # ax.set_yticks([])
-            # ax.set_title(idx)
-            # ax.set_aspect("equal")
-
-            fname = os.path.join(save_dir, f"{idx}.png")
-            im = Image.fromarray(im)
-            im.save(fname)
-
-        # plt.subplots_adjust(wspace=0.02, hspace=0.02)
-        # plt.show()
-
         info = env.info
         reward = 0
 
@@ -96,9 +85,22 @@ def main(cfg):
             env.start_rec(f'{dataset.n_episodes+1:06d}')
 
         # Rollout expert policy
-        for _ in range(task.max_steps):
+        for step in range(task.max_steps):
             act = agent.act(obs, info)
             episode.append((obs, act, reward, info))
+
+            if enable_nerf:
+                # Defer writing NeRF data as it's expensive and
+                # we only need it if the episode is successful.
+                deferred.add(
+                    write_nerf_data,
+                    env=env,
+                    dataset=dataset,
+                    seed=seed,
+                    step=step,
+                    should_plot=False,
+                )
+
             lang_goal = info['lang_goal']
             obs, reward, done, info = env.step(act)
             total_reward += reward
@@ -114,7 +116,14 @@ def main(cfg):
         # Only save completed demonstrations.
         if save_data and total_reward > 0.99:
             dataset.add(seed, episode)
+            deferred.execute()
 
 
 if __name__ == '__main__':
+    # Logger setup
+    debug = False
+    if not debug:
+        logger.remove()
+        logger.add(sys.stderr, level=logging.INFO)
+
     main()
